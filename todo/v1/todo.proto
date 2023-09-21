@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package todo.v1;
+
+option go_package = "example.com/todo/gen/todo/v1;todov1";
+
+message ToDo {
+  string id = 1;
+  string name = 2;
+  string status = 3;
+}
+
+message CreateRequest {
+  string name = 1;
+  string status = 2;
+}
+
+message CreateResponse {
+  ToDo todo = 1;
+}
+
+message UpdateRequest {
+  string id = 1;
+  string status = 2;
+}
+
+message UpdateResponse {
+  ToDo todo = 1;
+}
+
+message DeleteRequest {
+  string id = 1;
+}
+
+message DeleteResponse {
+}
+
+service ToDoService {
+  rpc Create(CreateRequest) returns (CreateResponse) {}
+  rpc Update(UpdateRequest) returns (UpdateResponse) {}
+  rpc Delete(DeleteRequest) returns (DeleteResponse) {}
+}
