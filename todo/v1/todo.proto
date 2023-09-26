@@ -21,7 +21,8 @@ message CreateResponse {
 
 message UpdateRequest {
   string id = 1;
-  string status = 2;
+  string name = 2;
+  string status = 3;
 }
 
 message UpdateResponse {

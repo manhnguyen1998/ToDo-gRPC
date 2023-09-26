@@ -43,15 +43,33 @@ func (s *ToDoServer) Update(
 	req *connect.Request[todov1.UpdateRequest],
 ) (*connect.Response[todov1.UpdateResponse], error) {
 	log.Println("Request headers: ", req.Header())
-	res := connect.NewResponse(&todov1.UpdateResponse{
-		Todo: &todov1.ToDo{
-			Id:     uuid.NewString(),
-			Name:   "title",
-			Status: "description",
-		},
+	_, ok := m.Load(req.Msg.Id)
+	if ok {
+		todo := &todov1.ToDo{
+			Id:     req.Msg.Id,
+			Name:   req.Msg.Name,
+			Status: req.Msg.Status,
+		}
+
+		m.Store(req.Msg.Id, todo)
+		fmt.Print(m.Load(req.Msg.Id))
+		res := connect.NewResponse(&todov1.UpdateResponse{
+			Todo: todo,
+		})
+		res.Header().Set("Greet-Version", "v1")
+		return res, nil
+	}
+
+	// TODO: Error handling
+	todo_notfound := &todov1.ToDo{
+		Id:     "notfound",
+		Name:   "notfound",
+		Status: "notfound",
+	}
+	not_found_res := connect.NewResponse(&todov1.UpdateResponse{
+		Todo: todo_notfound,
 	})
-	res.Header().Set("Greet-Version", "v1")
-	return res, nil
+	return not_found_res, nil
 }
 
 func (s *ToDoServer) Delete(
