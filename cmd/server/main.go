@@ -77,9 +77,19 @@ func (s *ToDoServer) Delete(
 	req *connect.Request[todov1.DeleteRequest],
 ) (*connect.Response[todov1.DeleteResponse], error) {
 	log.Println("Request headers: ", req.Header())
-	res := connect.NewResponse(&todov1.DeleteResponse{})
-	res.Header().Set("Greet-Version", "v1")
-	return res, nil
+	_, ok := m.Load(req.Msg.Id)
+	if ok {
+		m.Delete(req.Msg.Id)
+		fmt.Println("m.load")
+		fmt.Print(m.Load(req.Msg.Id))
+		res := connect.NewResponse(&todov1.DeleteResponse{})
+		res.Header().Set("Greet-Version", "v1")
+		return res, nil
+	}
+
+	// TODO: Error handling
+	not_found_res := connect.NewResponse(&todov1.DeleteResponse{})
+	return not_found_res, nil
 }
 
 func main() {
