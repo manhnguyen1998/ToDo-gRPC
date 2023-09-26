@@ -33,6 +33,8 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// ToDoServiceReadProcedure is the fully-qualified name of the ToDoService's Read RPC.
+	ToDoServiceReadProcedure = "/todo.v1.ToDoService/Read"
 	// ToDoServiceCreateProcedure is the fully-qualified name of the ToDoService's Create RPC.
 	ToDoServiceCreateProcedure = "/todo.v1.ToDoService/Create"
 	// ToDoServiceUpdateProcedure is the fully-qualified name of the ToDoService's Update RPC.
@@ -43,6 +45,7 @@ const (
 
 // ToDoServiceClient is a client for the todo.v1.ToDoService service.
 type ToDoServiceClient interface {
+	Read(context.Context, *connect.Request[v1.ReadRequest]) (*connect.Response[v1.ReadResponse], error)
 	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error)
 	Update(context.Context, *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error)
 	Delete(context.Context, *connect.Request[v1.DeleteRequest]) (*connect.Response[v1.DeleteResponse], error)
@@ -58,6 +61,11 @@ type ToDoServiceClient interface {
 func NewToDoServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) ToDoServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &toDoServiceClient{
+		read: connect.NewClient[v1.ReadRequest, v1.ReadResponse](
+			httpClient,
+			baseURL+ToDoServiceReadProcedure,
+			opts...,
+		),
 		create: connect.NewClient[v1.CreateRequest, v1.CreateResponse](
 			httpClient,
 			baseURL+ToDoServiceCreateProcedure,
@@ -78,9 +86,15 @@ func NewToDoServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 
 // toDoServiceClient implements ToDoServiceClient.
 type toDoServiceClient struct {
+	read   *connect.Client[v1.ReadRequest, v1.ReadResponse]
 	create *connect.Client[v1.CreateRequest, v1.CreateResponse]
 	update *connect.Client[v1.UpdateRequest, v1.UpdateResponse]
 	delete *connect.Client[v1.DeleteRequest, v1.DeleteResponse]
+}
+
+// Read calls todo.v1.ToDoService.Read.
+func (c *toDoServiceClient) Read(ctx context.Context, req *connect.Request[v1.ReadRequest]) (*connect.Response[v1.ReadResponse], error) {
+	return c.read.CallUnary(ctx, req)
 }
 
 // Create calls todo.v1.ToDoService.Create.
@@ -100,6 +114,7 @@ func (c *toDoServiceClient) Delete(ctx context.Context, req *connect.Request[v1.
 
 // ToDoServiceHandler is an implementation of the todo.v1.ToDoService service.
 type ToDoServiceHandler interface {
+	Read(context.Context, *connect.Request[v1.ReadRequest]) (*connect.Response[v1.ReadResponse], error)
 	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error)
 	Update(context.Context, *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error)
 	Delete(context.Context, *connect.Request[v1.DeleteRequest]) (*connect.Response[v1.DeleteResponse], error)
@@ -111,6 +126,11 @@ type ToDoServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewToDoServiceHandler(svc ToDoServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	toDoServiceReadHandler := connect.NewUnaryHandler(
+		ToDoServiceReadProcedure,
+		svc.Read,
+		opts...,
+	)
 	toDoServiceCreateHandler := connect.NewUnaryHandler(
 		ToDoServiceCreateProcedure,
 		svc.Create,
@@ -128,6 +148,8 @@ func NewToDoServiceHandler(svc ToDoServiceHandler, opts ...connect.HandlerOption
 	)
 	return "/todo.v1.ToDoService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case ToDoServiceReadProcedure:
+			toDoServiceReadHandler.ServeHTTP(w, r)
 		case ToDoServiceCreateProcedure:
 			toDoServiceCreateHandler.ServeHTTP(w, r)
 		case ToDoServiceUpdateProcedure:
@@ -142,6 +164,10 @@ func NewToDoServiceHandler(svc ToDoServiceHandler, opts ...connect.HandlerOption
 
 // UnimplementedToDoServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedToDoServiceHandler struct{}
+
+func (UnimplementedToDoServiceHandler) Read(context.Context, *connect.Request[v1.ReadRequest]) (*connect.Response[v1.ReadResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("todo.v1.ToDoService.Read is not implemented"))
+}
 
 func (UnimplementedToDoServiceHandler) Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("todo.v1.ToDoService.Create is not implemented"))

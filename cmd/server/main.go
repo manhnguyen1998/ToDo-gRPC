@@ -18,6 +18,42 @@ type ToDoServer struct{}
 
 var m = sync.Map{}
 
+func (s *ToDoServer) Read(
+	ctx context.Context,
+	req *connect.Request[todov1.ReadRequest],
+) (*connect.Response[todov1.ReadResponse], error) {
+	_, ok := m.Load(req.Msg.Id)
+	if ok {
+		fmt.Print(m.Load(req.Msg.Id))
+		todo := &todov1.ToDo{
+			Id:     req.Msg.Id,
+			Name:   "aaa",
+			Status: "aaaa",
+		}
+
+		res := connect.NewResponse(&todov1.ReadResponse{
+				Todo: todo,
+		})
+		return res, nil
+	}
+
+	// m.Store(id, todo)
+	// log.Println("Request headers: ", req.Header())
+	// res := connect.NewResponse(&todov1.CreateResponse{
+	// 	Todo: todo,
+	// })
+	// res.Header().Set("Greet-Version", "v1")
+	todo_notfound := &todov1.ToDo{
+		Id:     "notfound",
+		Name:   "notfound",
+		Status: "notfound",
+	}
+	not_found_res := connect.NewResponse(&todov1.ReadResponse{
+		Todo: todo_notfound,
+	})
+	return not_found_res, nil
+}
+
 func (s *ToDoServer) Create(
 	ctx context.Context,
 	req *connect.Request[todov1.CreateRequest],

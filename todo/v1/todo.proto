@@ -10,6 +10,14 @@ message ToDo {
   string status = 3;
 }
 
+message ReadRequest {
+  string id = 1;
+}
+
+message ReadResponse {
+  ToDo todo = 1;
+}
+
 message CreateRequest {
   string name = 1;
   string status = 2;
@@ -37,6 +45,7 @@ message DeleteResponse {
 }
 
 service ToDoService {
+  rpc Read(ReadRequest) returns (ReadResponse) {}
   rpc Create(CreateRequest) returns (CreateResponse) {}
   rpc Update(UpdateRequest) returns (UpdateResponse) {}
   rpc Delete(DeleteRequest) returns (DeleteResponse) {}
