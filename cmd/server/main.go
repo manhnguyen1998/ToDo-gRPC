@@ -80,8 +80,13 @@ func (s *ToDoServer) Update(
 			Name:   req.Msg.Name,
 			Status: req.Msg.Status,
 		}
-
 		m.Store(req.Msg.Id, todo)
+		if updatedTodo, ok := m.Load(req.Msg.Id); ok {
+			if updatedTodo != todo {
+				err := status.Error(codes.Internal, "failed to update todo")
+				return nil, err
+			}
+		}
 		fmt.Print(m.Load(req.Msg.Id))
 		res := connect.NewResponse(&todov1.UpdateResponse{
 			Todo: todo,
@@ -101,6 +106,10 @@ func (s *ToDoServer) Delete(
 	_, ok := m.Load(req.Msg.Id)
 	if ok {
 		m.Delete(req.Msg.Id)
+		if _, ok := m.Load(req.Msg.Id); ok {
+			err := status.Error(codes.Internal, "failed to delete todo")
+			return nil, err
+		}
 		fmt.Println("m.load")
 		fmt.Print(m.Load(req.Msg.Id))
 		res := connect.NewResponse(&todov1.DeleteResponse{})
