@@ -33,7 +33,7 @@ func (s *ToDoServer) Read(
 		})
 		return res, nil
 	}
-	err := status.Error(codes.NotFound, "not found")
+	err := status.Error(codes.NotFound, req.Msg.Id+" is not found")
 	return nil, err
 }
 
@@ -43,18 +43,29 @@ func (s *ToDoServer) Create(
 ) (*connect.Response[todov1.CreateResponse], error) {
 	fmt.Printf("%v", req)
 	id := uuid.NewString()
+	_, ok := m.Load(id)
+	if ok {
+		err := status.Error(codes.AlreadyExists, id+" is already exists")
+		return nil, err
+	}
 	todo := &todov1.ToDo{
 		Id:     id,
 		Name:   req.Msg.Name,
 		Status: req.Msg.Status,
 	}
 	m.Store(id, todo)
-	log.Println("Request headers: ", req.Header())
-	res := connect.NewResponse(&todov1.CreateResponse{
-		Todo: todo,
-	})
-	res.Header().Set("Greet-Version", "v1")
-	return res, nil
+
+	_, ok = m.Load(id)
+	if ok {
+		log.Println("Request headers: ", req.Header())
+		res := connect.NewResponse(&todov1.CreateResponse{
+			Todo: todo,
+		})
+		res.Header().Set("Greet-Version", "v1")
+		return res, nil
+	}
+	err := status.Error(codes.Internal, "failed to create todo")
+	return nil, err
 }
 
 func (s *ToDoServer) Update(
@@ -78,7 +89,7 @@ func (s *ToDoServer) Update(
 		res.Header().Set("Greet-Version", "v1")
 		return res, nil
 	}
-	err := status.Error(codes.NotFound, "not found")
+	err := status.Error(codes.NotFound, req.Msg.Id+" is not found")
 	return nil, err
 }
 
@@ -96,10 +107,8 @@ func (s *ToDoServer) Delete(
 		res.Header().Set("Greet-Version", "v1")
 		return res, nil
 	}
-
-	// TODO: Error handling
-	not_found_res := connect.NewResponse(&todov1.DeleteResponse{})
-	return not_found_res, nil
+	err := status.Error(codes.NotFound, req.Msg.Id+" is not found")
+	return nil, err
 }
 
 func main() {
