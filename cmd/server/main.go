@@ -48,6 +48,7 @@ func (s *ToDoServer) Create(
 		err := status.Error(codes.AlreadyExists, id+" is already exists")
 		return nil, err
 	}
+	// TODO: validate todo
 	todo := &todov1.ToDo{
 		Id:     id,
 		Name:   req.Msg.Name,

@@ -6,7 +6,9 @@ option go_package = "example.com/todo/gen/todo/v1;todov1";
 
 message ToDo {
   string id = 1;
+  // TODO: name required
   string name = 2;
+  // TODO: add status enum
   string status = 3;
 }
 
