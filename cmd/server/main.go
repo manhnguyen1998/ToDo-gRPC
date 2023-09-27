@@ -78,17 +78,8 @@ func (s *ToDoServer) Update(
 		res.Header().Set("Greet-Version", "v1")
 		return res, nil
 	}
-
-	// TODO: Error handling
-	todo_notfound := &todov1.ToDo{
-		Id:     "notfound",
-		Name:   "notfound",
-		Status: "notfound",
-	}
-	not_found_res := connect.NewResponse(&todov1.UpdateResponse{
-		Todo: todo_notfound,
-	})
-	return not_found_res, nil
+	err := status.Error(codes.NotFound, "not found")
+	return nil, err
 }
 
 func (s *ToDoServer) Delete(
