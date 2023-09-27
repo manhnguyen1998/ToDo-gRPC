@@ -13,6 +13,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ToDoServer struct{}
@@ -31,15 +33,8 @@ func (s *ToDoServer) Read(
 		})
 		return res, nil
 	}
-	todo_notfound := &todov1.ToDo{
-		Id:     "notfound",
-		Name:   "notfound",
-		Status: "notfound",
-	}
-	not_found_res := connect.NewResponse(&todov1.ReadResponse{
-		Todo: todo_notfound,
-	})
-	return not_found_res, nil
+	err := status.Error(codes.NotFound, "not found")
+	return nil, err
 }
 
 func (s *ToDoServer) Create(
