@@ -4,12 +4,19 @@ package todo.v1;
 
 option go_package = "example.com/todo/gen/todo/v1;todov1";
 
+enum Status {
+  STATUS_TASK_UNSPECIFIED = 0;
+  STATUS_IMPORTANT = 1;
+  STATUS_LATER = 2;
+  STATUS_DONE = 3;
+}
+
 message ToDo {
   string id = 1;
   // TODO: name required
   string name = 2;
   // TODO: add status enum
-  string status = 3;
+  Status status = 3;
 }
 
 message ReadRequest {
@@ -22,7 +29,7 @@ message ReadResponse {
 
 message CreateRequest {
   string name = 1;
-  string status = 2;
+  Status status = 2;
 }
 
 message CreateResponse {
@@ -32,7 +39,7 @@ message CreateResponse {
 message UpdateRequest {
   string id = 1;
   string name = 2;
-  string status = 3;
+  Status status = 3;
 }
 
 message UpdateResponse {

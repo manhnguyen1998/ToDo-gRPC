@@ -26,8 +26,13 @@ func (s *ToDoServer) Read(
 	req *connect.Request[todov1.ReadRequest],
 ) (*connect.Response[todov1.ReadResponse], error) {
 	todo, ok := m.Load(req.Msg.Id)
+	println("todo")
+	fmt.Printf("%v", todo)
+	println("-----------------")
 	if ok {
+
 		fmt.Print(m.Load(req.Msg.Id))
+
 		res := connect.NewResponse(&todov1.ReadResponse{
 			Todo: todo.(*todov1.ToDo),
 		})
@@ -49,6 +54,9 @@ func (s *ToDoServer) Create(
 		return nil, err
 	}
 	// TODO: validate todo
+	println("req.Msg.Status")
+	println(req.Msg.Status)
+	println("-----------------")
 	todo := &todov1.ToDo{
 		Id:     id,
 		Name:   req.Msg.Name,
