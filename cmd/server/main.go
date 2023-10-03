@@ -17,21 +17,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type ToDoServer struct{}
-
-var m = sync.Map{}
+type ToDoServer struct {
+	m sync.Map
+}
 
 func (s *ToDoServer) Read(
 	ctx context.Context,
 	req *connect.Request[todov1.ReadRequest],
 ) (*connect.Response[todov1.ReadResponse], error) {
-	todo, ok := m.Load(req.Msg.Id)
+	todo, ok := s.m.Load(req.Msg.Id)
 	println("todo")
 	fmt.Printf("%v", todo)
 	println("-----------------")
 	if ok {
 
-		fmt.Print(m.Load(req.Msg.Id))
+		fmt.Print(s.m.Load(req.Msg.Id))
 
 		res := connect.NewResponse(&todov1.ReadResponse{
 			Todo: todo.(*todov1.ToDo),
@@ -48,7 +48,7 @@ func (s *ToDoServer) Create(
 ) (*connect.Response[todov1.CreateResponse], error) {
 	fmt.Printf("%v", req)
 	id := uuid.NewString()
-	_, ok := m.Load(id)
+	_, ok := s.m.Load(id)
 	if ok {
 		err := status.Error(codes.AlreadyExists, id+" is already exists")
 		return nil, err
@@ -62,9 +62,9 @@ func (s *ToDoServer) Create(
 		Name:   req.Msg.Name,
 		Status: req.Msg.Status,
 	}
-	m.Store(id, todo)
+	s.m.Store(id, todo)
 
-	_, ok = m.Load(id)
+	_, ok = s.m.Load(id)
 	if ok {
 		log.Println("Request headers: ", req.Header())
 		res := connect.NewResponse(&todov1.CreateResponse{
@@ -82,21 +82,21 @@ func (s *ToDoServer) Update(
 	req *connect.Request[todov1.UpdateRequest],
 ) (*connect.Response[todov1.UpdateResponse], error) {
 	log.Println("Request headers: ", req.Header())
-	_, ok := m.Load(req.Msg.Id)
+	_, ok := s.m.Load(req.Msg.Id)
 	if ok {
 		todo := &todov1.ToDo{
 			Id:     req.Msg.Id,
 			Name:   req.Msg.Name,
 			Status: req.Msg.Status,
 		}
-		m.Store(req.Msg.Id, todo)
-		if updatedTodo, ok := m.Load(req.Msg.Id); ok {
+		s.m.Store(req.Msg.Id, todo)
+		if updatedTodo, ok := s.m.Load(req.Msg.Id); ok {
 			if updatedTodo != todo {
 				err := status.Error(codes.Internal, "failed to update todo")
 				return nil, err
 			}
 		}
-		fmt.Print(m.Load(req.Msg.Id))
+		fmt.Print(s.m.Load(req.Msg.Id))
 		res := connect.NewResponse(&todov1.UpdateResponse{
 			Todo: todo,
 		})
@@ -112,15 +112,15 @@ func (s *ToDoServer) Delete(
 	req *connect.Request[todov1.DeleteRequest],
 ) (*connect.Response[todov1.DeleteResponse], error) {
 	log.Println("Request headers: ", req.Header())
-	_, ok := m.Load(req.Msg.Id)
+	_, ok := s.m.Load(req.Msg.Id)
 	if ok {
-		m.Delete(req.Msg.Id)
-		if _, ok := m.Load(req.Msg.Id); ok {
+		s.m.Delete(req.Msg.Id)
+		if _, ok := s.m.Load(req.Msg.Id); ok {
 			err := status.Error(codes.Internal, "failed to delete todo")
 			return nil, err
 		}
 		fmt.Println("m.load")
-		fmt.Print(m.Load(req.Msg.Id))
+		fmt.Print(s.m.Load(req.Msg.Id))
 		res := connect.NewResponse(&todov1.DeleteResponse{})
 		res.Header().Set("Greet-Version", "v1")
 		return res, nil
